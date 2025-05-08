@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Busca de Patrulhas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f4f6f8;
+      margin: 0;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      color: #2c3e50;
+    }
+    input[type="text"] {
+      padding: 0.5rem 1rem;
+      width: 300px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-top: 1rem;
+    }
+    .card {
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      padding: 1.5rem;
+      margin-top: 2rem;
+      width: 100%;
+      max-width: 600px;
+    }
+    .card h2 {
+      margin-top: 0;
+      color: #34495e;
+    }
+    .card p {
+      margin: 0.5rem 0;
+    }
+    .team {
+      margin-top: 1rem;
+    }
+    .team li {
+      margin-left: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Consulta de Patrulhas</h1>
+  <input type="text" id="search" placeholder="Digite seu nome..." oninput="buscarNome()" />
+
+  <div id="resultado" class="card" style="display: none;"></div>
+
+  <script>
+    const dados = [
+      {
+        patrulha: "Alfa Lobo",
+        local: "Rua das Orquídeas, 123",
+        dia: "Segunda-feira",
+        horario: "08:00 - 16:00",
+        policiais: ["Carlos Silva", "João Pereira", "Ana Costa", "Marcos Lima", "Beatriz Rocha", "Daniel Souza"]
+      },
+      {
+        patrulha: "Bravo Tigre",
+        local: "Av. das Palmeiras, 456",
+        dia: "Terça-feira",
+        horario: "14:00 - 22:00",
+        policiais: ["Rafael Borges", "Luciana Alves", "Sérgio Mendes", "Paula Duarte", "Cláudio Ramos", "Felipe Rocha"]
+      },
+      // Adicione mais 18 patrulhas fictícias similares...
+    ];
+
+    function buscarNome() {
+      const nome = document.getElementById('search').value.toLowerCase();
+      const resultado = document.getElementById('resultado');
+
+      const encontrado = dados.find(patrulha =>
+        patrulha.policiais.some(p => p.toLowerCase().includes(nome))
+      );
+
+      if (encontrado) {
+        resultado.style.display = 'block';
+        resultado.innerHTML = `
+          <h2>Patrulha: ${encontrado.patrulha}</h2>
+          <p><strong>Local:</strong> ${encontrado.local}</p>
+          <p><strong>Dia:</strong> ${encontrado.dia}</p>
+          <p><strong>Horário:</strong> ${encontrado.horario}</p>
+          <div class="team">
+            <p><strong>Equipe:</strong></p>
+            <ul>${encontrado.policiais.map(p => `<li>${p}</li>`).join('')}</ul>
+          </div>
+        `;
+      } else {
+        resultado.style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>
