@@ -200,12 +200,43 @@ async function verificarCompensacao(){
     return;
   }
 
+  const matricula = compMat.value;
+  const dataNova = new Date(compData.value);
+
+  /* 🔍 BUSCA ÚLTIMA COMPENSAÇÃO */
+  const { data: ultimas, error: erroBusca } = await supabaseClient
+    .from("compensacoes")
+    .select("data_compensacao")
+    .eq("matricula", matricula)
+    .order("data_compensacao", { ascending: false })
+    .limit(1);
+
+  if (erroBusca) {
+    alert("Erro ao verificar compensações anteriores");
+    return;
+  }
+
+  if (ultimas && ultimas.length > 0) {
+    const dataUltima = new Date(ultimas[0].data_compensacao);
+
+    const diffDias =
+      (dataNova - dataUltima) / (1000 * 60 * 60 * 24);
+
+    if (diffDias < 30) {
+      alert(
+        `⚠️ Compensação não permitida.\nÚltima folga há ${Math.floor(diffDias)} dias.\nÉ necessário aguardar 30 dias.`
+      );
+      return;
+    }
+  }
+
+  /* ✅ INSERE COMPENSAÇÃO */
   const { error } = await supabaseClient
     .from("compensacoes")
     .insert([{
-      matricula: compMat.value,
+      matricula: matricula,
       pontos_utilizados: 40,
-      data_compensacao: compData.value, // ✅ DATA INFORMADA PELO USUÁRIO
+      data_compensacao: compData.value,
       comandante_autorizador: compCmd.value
     }]);
 
@@ -218,9 +249,9 @@ async function verificarCompensacao(){
 
   gerarPDFCompensacao({
     policial: document.getElementById("nomeComp").innerText,
-    matricula: compMat.value,
+    matricula: matricula,
     comandante: compCmd.value,
-    data: compData.value // ✅ MESMA DATA NO PDF
+    data: compData.value
   });
 
   /* LIMPA CAMPOS */
@@ -229,25 +260,97 @@ async function verificarCompensacao(){
   compData.value = "";
   compResultado.innerHTML = "";
   nomeComp.innerHTML = "";
+
 }
 
 
 /* PDF COMPENSAÇÃO */
-function gerarPDFCompensacao(d){
-  const doc = new jsPDF();
-  const cod = "2BPM-"+Math.random().toString(36).substr(2,8).toUpperCase();
+const nomeLimpo = document
+  .getElementById("nomeComp")
+  .innerText
+  .replace("Policiais envolvidos:", "")
+  .replace("•", "")
+  .trim();
 
-  doc.text("POLÍCIA MILITAR DO RN – 2º BPM",105,20,{align:"center"});
-  doc.text("COMPENSAÇÃO DE FOLGA",105,30,{align:"center"});
-  doc.text(`Policial: ${d.policial}`,20,50);
-  doc.text(`Matrícula: ${d.matricula}`,20,60);
-  doc.text(`Pontos Utilizados: 40`,20,70);
-  doc.text(`Comandante: ${d.comandante}`,20,80);
-  doc.text(`Data: ${d.data}`,20,90);
-  doc.text(`Código: ${cod}`,20,110);
+function gerarPDFCompensacao(d) {
 
-  doc.save(`Compensacao_${d.matricula}.pdf`);
+  const jsPDF = window.jspdf.jsPDF;
+  const doc = new jsPDF("p", "mm", "a4");
+
+  const margemX = 20;
+  let y = 20;
+
+  const azulPM = [0, 51, 102];
+  const cinzaClaro = [230, 230, 230];
+
+  const codigo = "2BPM-" + Math.random().toString(36).substr(2, 8).toUpperCase();
+
+  /* ===== CABEÇALHO ===== */
+  doc.setFillColor(...azulPM);
+  doc.rect(0, 0, 210, 30, "F");
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(14);
+  doc.text("POLÍCIA MILITAR DO RIO GRANDE DO NORTE", 105, 15, { align: "center" });
+  doc.setFontSize(11);
+  doc.text("2º BATALHÃO DE POLÍCIA MILITAR", 105, 22, { align: "center" });
+
+  /* ===== TÍTULO ===== */
+  y = 45;
+  doc.setTextColor(0);
+  doc.setFontSize(13);
+  doc.text("TERMO DE COMPENSAÇÃO DE FOLGA", 105, y, { align: "center" });
+
+  /* ===== BLOCO DE DADOS ===== */
+  y += 12;
+  doc.setFillColor(...cinzaClaro);
+  doc.rect(margemX - 2, y - 6, 170, 60, "F");
+
+  doc.setFontSize(11);
+  doc.setTextColor(0);
+
+  doc.text(` ${d.policial}`, margemX, y);
+  y += 10;
+  doc.text(`Matrícula: ${d.matricula}`, margemX, y);
+  y += 10;
+  doc.text(`Pontos Utilizados: 40`, margemX, y);
+  y += 10;
+  doc.text(`Data da Folga: ${formatarDataBR(d.data)}`, margemX, y);
+  y += 10;
+  doc.text(`Comandante Autorizador: ${d.comandante}`, margemX, y);
+
+  /* ===== TEXTO FORMAL ===== */
+  y += 15;
+  doc.setFontSize(10);
+  doc.text(
+    "Declaro, para os devidos fins, que a compensação de folga acima descrita " +
+    "foi concedida conforme normas internas do 2º Batalhão de Polícia Militar, " +
+    "observando-se o saldo mínimo de pontos exigido.",
+    margemX,
+    y,
+    { maxWidth: 170, align: "justify" }
+  );
+
+  /* ===== RODAPÉ / ASSINATURAS ===== */
+  y += 35;
+
+  doc.line(30, y, 90, y);
+  doc.line(120, y, 180, y);
+
+  y += 5;
+  doc.setFontSize(10);
+  doc.text("Policial Militar", 60, y, { align: "center" });
+  doc.text("Comandante Autorizador", 150, y, { align: "center" });
+
+  /* ===== CÓDIGO DE CONTROLE ===== */
+  y += 15;
+  doc.setFontSize(9);
+  doc.text(`Código de controle: ${codigo}`, margemX, y);
+
+  /* ===== FINAL ===== */
+  doc.save(`Compensacao_Folga_${d.matricula}.pdf`);
 }
+
 
 /* CONSULTA */
 let dadosConsulta = [];
@@ -262,6 +365,8 @@ let dadosConsulta = [];
     .select("matricula, nome_completo");
 
   if (matFiltro) qUser = qUser.eq("matricula", matFiltro);
+  const dataInicio = document.getElementById("dataInicio")?.value || null;
+const dataFim = document.getElementById("dataFim")?.value || null;
 
   const { data: usuarios } = await qUser;
   if (!usuarios || usuarios.length === 0) {
@@ -270,14 +375,33 @@ let dadosConsulta = [];
   }
 
   /* PONTUAÇÕES */
-  const { data: pontuacoes } = await supabaseClient
-    .from("pontuacoes")
-    .select("matricula, tipo, pontos, data");
+  let qPont = supabaseClient
+  .from("pontuacoes")
+  .select(`
+    matricula,
+    tipo,
+    pontos,
+    data,
+    numero_procedimento,
+    info_adicional
+  `);
+
+if (dataInicio) qPont = qPont.gte("data", dataInicio);
+if (dataFim) qPont = qPont.lte("data", dataFim);
+
+const { data: pontuacoes } = await qPont;
+
 
   /* COMPENSAÇÕES */
-  const { data: compensacoes } = await supabaseClient
-    .from("compensacoes")
-    .select("matricula, pontos_utilizados, data_compensacao");
+  let qComp = supabaseClient
+  .from("compensacoes")
+  .select("matricula, pontos_utilizados, data_compensacao");
+
+if (dataInicio) qComp = qComp.gte("data_compensacao", dataInicio);
+if (dataFim) qComp = qComp.lte("data_compensacao", dataFim);
+
+const { data: compensacoes } = await qComp;
+
 
   let html = `
     <table>
@@ -306,11 +430,14 @@ let dadosConsulta = [];
       .forEach(p => {
         totalP += p.pontos;
         movimentos.push({
-          tipo: p.tipo,
-          mov: "ADIÇÃO",
-          data: p.data,
-          pontos: p.pontos
-        });
+      tipo: p.tipo,
+      mov: "ADIÇÃO",
+      data: p.data,
+      pontos: p.pontos,
+      numero_procedimento: p.numero_procedimento,
+      info_adicional: p.info_adicional
+      });
+
       });
 
     compensacoes
@@ -345,13 +472,16 @@ let dadosConsulta = [];
       `;
 
       dadosConsulta.push({
-        matricula: u.matricula,
-        nome: u.nome_completo,
-        tipo: m.tipo,
-        mov: m.mov,
-        data: m.data,
-        pontos: m.pontos
-      });
+      matricula: u.matricula,
+      nome: u.nome_completo,
+      tipo: m.tipo,
+      mov: m.mov,
+      data: m.data,
+      pontos: m.pontos,
+      numero_procedimento: m.numero_procedimento,
+      info_adicional: m.info_adicional
+    });
+
     });
 
     /* ===== SALDO ===== */
@@ -380,15 +510,25 @@ function telaInicial() {
   });
 }
 let dadosCompensacoes = [];
-function linhaPDF(doc, x, y, cols, larguras) {
+
+function linhaPDF(doc, x, y, cols, larguras, fundo = null, corTexto = [0,0,0]) {
+
+  // Fundo da linha (se existir)
+  if (fundo) {
+    doc.setFillColor(...fundo);
+    doc.rect(x, y - 4, larguras.reduce((a,b)=>a+b), 6, "F");
+  }
+
   let posX = x;
+  doc.setTextColor(...corTexto);
+
   cols.forEach((txt, i) => {
-    doc.text(String(txt), posX, y);
+    doc.text(String(txt ?? "-"), posX + 1, y);
     posX += larguras[i];
   });
 }
-
 function gerarPDFConsulta() {
+
   if (!dadosConsulta || !dadosConsulta.length) {
     alert("Sem dados para gerar relatório");
     return;
@@ -399,15 +539,16 @@ function gerarPDFConsulta() {
 
   const margemX = 12;
   let y = 20;
-
   const larguras = [25, 45, 30, 40, 40];
 
+  /* TÍTULO */
   doc.setFontSize(14);
+  doc.setTextColor(0);
   doc.text("RELATÓRIO DE PONTUAÇÃO – 2º BPM", 105, 12, { align: "center" });
 
   const militares = {};
 
-  // Agrupa pontuações
+  /* AGRUPA PONTUAÇÕES */
   dadosConsulta.forEach(p => {
     if (!militares[p.matricula]) {
       militares[p.matricula] = {
@@ -421,7 +562,7 @@ function gerarPDFConsulta() {
     militares[p.matricula].saldo += Number(p.pontos);
   });
 
-  // Agrupa compensações
+  /* AGRUPA COMPENSAÇÕES */
   if (dadosCompensacoes) {
     dadosCompensacoes.forEach(c => {
       if (militares[c.matricula]) {
@@ -432,6 +573,7 @@ function gerarPDFConsulta() {
   }
 
   Object.keys(militares).forEach(matricula => {
+
     const m = militares[matricula];
 
     if (y > 250) {
@@ -439,7 +581,7 @@ function gerarPDFConsulta() {
       y = 20;
     }
 
-    // Cabeçalho do militar
+    /* CABEÇALHO DO MILITAR */
     doc.setFillColor(230, 230, 230);
     doc.rect(margemX, y, 186, 8, "F");
     doc.setFontSize(10);
@@ -447,25 +589,30 @@ function gerarPDFConsulta() {
     doc.text(`Matrícula: ${matricula} | Nome: ${m.nome}`, margemX + 2, y + 5);
     y += 12;
 
-    // ===== PONTUAÇÕES =====
-    doc.setTextColor(0, 0, 128);
+    /* ===== PONTUAÇÕES ===== */
     doc.setFontSize(10);
+    doc.setTextColor(0, 51, 102);
     doc.text("PONTUAÇÕES", margemX, y);
     y += 6;
 
+    /* CABEÇALHO DA TABELA */
     doc.setFontSize(9);
-    doc.setTextColor(0);
-
     linhaPDF(
       doc,
       margemX,
       y,
       ["Data", "Tipo", "Mov.", "Procedimento", "Observação"],
-      larguras
+      larguras,
+      [0, 51, 102],       // AZUL INSTITUCIONAL
+      [255, 255, 255]    // TEXTO BRANCO
     );
-    y += 5;
+    y += 6;
 
-    m.pontuacoes.forEach(p => {
+    /* LINHAS DE PONTUAÇÃO */
+    m.pontuacoes.forEach((p, i) => {
+
+      const fundoLinha = i % 2 === 0 ? [245, 245, 245] : null;
+
       linhaPDF(
         doc,
         margemX,
@@ -474,36 +621,46 @@ function gerarPDFConsulta() {
           p.data,
           p.tipo,
           `+${p.pontos}`,
-          p.procedimento || "-",
-          p.observacao || "-"
+          p.numero_procedimento || "-",
+          p.info_adicional || "-"
         ],
-        larguras
+        larguras,
+        fundoLinha,
+        [0, 0, 0]
       );
+
       y += 5;
+
       if (y > 270) {
         doc.addPage();
         y = 20;
       }
     });
 
-    // ===== COMPENSAÇÕES =====
+    /* ===== COMPENSAÇÕES ===== */
     if (m.compensacoes.length) {
-      y += 4;
+
+      y += 6;
+      doc.setFontSize(10);
       doc.setTextColor(128, 0, 0);
       doc.text("COMPENSAÇÕES", margemX, y);
       y += 6;
 
-      doc.setTextColor(0);
       linhaPDF(
         doc,
         margemX,
         y,
         ["Data", "Tipo", "Mov.", "Procedimento", "Comandante"],
-        larguras
+        larguras,
+        [128, 0, 0],       // VERMELHO INSTITUCIONAL
+        [255, 255, 255]
       );
-      y += 5;
+      y += 6;
 
-      m.compensacoes.forEach(c => {
+      m.compensacoes.forEach((c, i) => {
+
+        const fundoLinha = i % 2 === 0 ? [255, 235, 235] : null;
+
         linhaPDF(
           doc,
           margemX,
@@ -515,16 +672,19 @@ function gerarPDFConsulta() {
             "-",
             c.comandante_autorizador
           ],
-          larguras
+          larguras,
+          fundoLinha,
+          [0, 0, 0]
         );
+
         y += 5;
       });
     }
 
-    // ===== SALDO =====
-    y += 5;
+    /* ===== SALDO ===== */
+    y += 6;
     doc.setFontSize(11);
-    doc.setTextColor(0, 100, 0);
+    doc.setTextColor(m.saldo >= 0 ? 0 : 150, m.saldo >= 0 ? 100 : 0, 0);
     doc.text(`SALDO ATUAL: ${m.saldo} PONTOS`, margemX, y);
 
     y += 15;
@@ -532,6 +692,96 @@ function gerarPDFConsulta() {
 
   doc.save("Relatorio_Pontuacao_Geral_2BPM.pdf");
 }
+
+async function carregarDashboard() {
+
+  /* USUÁRIOS */
+  const { data: usuarios } = await supabaseClient
+    .from("usuarios")
+    .select("matricula, nome_completo");
+
+  /* PONTUAÇÕES */
+  const { data: pontos } = await supabaseClient
+    .from("pontuacoes")
+    .select("matricula, pontos");
+
+  /* COMPENSAÇÕES */
+  const { data: compensacoes } = await supabaseClient
+    .from("compensacoes")
+    .select("matricula, pontos_utilizados");
+
+  if (!usuarios) return;
+
+  let totalPontosBPM = 0;
+  let totalFolgas = compensacoes?.length || 0;
+
+  const mapa = {};
+
+  usuarios.forEach(u => {
+    mapa[u.matricula] = {
+      nome: u.nome_completo,
+      pontos: 0,
+      usados: 0
+    };
+  });
+
+  pontos?.forEach(p => {
+    if (mapa[p.matricula]) {
+      mapa[p.matricula].pontos += p.pontos;
+      totalPontosBPM += p.pontos;
+    }
+  });
+
+  compensacoes?.forEach(c => {
+    if (mapa[c.matricula]) {
+      mapa[c.matricula].usados += c.pontos_utilizados;
+    }
+  });
+
+  let aptos = [];
+
+  Object.keys(mapa).forEach(mat => {
+    const saldo = mapa[mat].pontos - mapa[mat].usados;
+    if (saldo >= 40) {
+      aptos.push({
+        matricula: mat,
+        nome: mapa[mat].nome,
+        saldo
+      });
+    }
+  });
+
+  /* ATUALIZA CARDS */
+  $("dashTotalPoliciais").innerText = usuarios.length;
+  $("dashAptos").innerText = aptos.length;
+  $("dashPontos").innerText = totalPontosBPM;
+  $("dashFolgas").innerText = totalFolgas;
+
+  /* LISTA APTOS */
+  let html = `
+    <table>
+      <tr>
+        <th>Matrícula</th>
+        <th>Nome</th>
+        <th>Saldo</th>
+      </tr>
+  `;
+
+  aptos.forEach(a => {
+    html += `
+      <tr>
+        <td>${a.matricula}</td>
+        <td>${a.nome}</td>
+        <td>${a.saldo}</td>
+      </tr>
+    `;
+  });
+
+  html += "</table>";
+
+  $("listaAptos").innerHTML = html;
+}
+carregarDashboard();
 
 
 
