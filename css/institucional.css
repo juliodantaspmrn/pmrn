@@ -10,10 +10,6 @@ body {
 
 header {
   background: #001529;
-  padding: 15px;
-  text-align: center;
-  font-weight: bold;
-  font-size: 20px;
 }
 
 /* =========================
@@ -94,13 +90,13 @@ th {
   background-color: #2f3e4e;
   color: #ffffff;
   padding: 10px;
-  border: 1px solid #555;
+  border: 1px solid #0c0c0c;
   text-align: center;
 }
 
 td {
   padding: 8px 12px;
-  border: 1px solid #555;
+  border: 1px solid #1d1c1c;
   text-align: center;
 }
 
@@ -116,8 +112,8 @@ tr.adicao {
 
 /* COMPENSAÇÃO DE FOLGA */
 tr.comp {
-  background-color: #e6e6e6;
-  color: #000000;
+  background-color: #1a3d02;
+  color: #f7f1f1;
   font-weight: bold;
 }
 
@@ -126,13 +122,13 @@ tr.saldo {
   background-color: #cfcfcf;
   color: #000000;
   font-weight: bold;
-  border-top: 3px solid #000;
+  border-top: 1px solid #000;
 }
 
 /* =========================
    RESPONSIVIDADE
 ========================= */
-@media (max-width: 768px) {
+@media (max-widNYNNth: 768px) {
   th, td {
     font-size: 12px;
     padding: 6px;
@@ -142,17 +138,169 @@ tr.saldo {
 .topo {
   background: #001529;
   padding: 15px 10px;
+
+  /* COMPENSA A SIDEBAR */
+  margin-left: 240px;
+  width: calc(100% - 240px);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+
+.brasao {
+  height: 80px;
+  display: block;
+  margin: 0 auto 10px auto;
+}
+
+
+.titulo-topo {
+  color: #faf5f5;
+  font-size: 20px;
+  font-weight: bold;
   text-align: center;
 }
 
-.brasao {
-  height: 80px;        /* controle do tamanho */
-  display: block;
-  margin: 0 auto 8px; /* centraliza */
+.dash-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+  margin: 15px 0;
 }
 
-.titulo-topo {
+.dash-item {
+  background: #0b3c5d;
   color: #fff;
-  font-size: 20px;
+  padding: 15px;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.dash-item span {
+  font-size: 26px;
   font-weight: bold;
+  display: block;
+}
+
+#listaAptos table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+#listaAptos th, #listaAptos td {
+  border: 1px solid #161616;
+  padding: 6px;
+  text-align: left;
+}
+
+#listaAptos th {
+  background: #0f0f0f;
+}
+/* ===== SIDEBAR ===== */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 240px;
+  height: 100vh;
+  background: #0b2d4d; /* azul institucional */
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 6px rgba(0,0,0,0.3);
+  z-index: 1000;
+}
+
+.sidebar-header {
+  text-align: center;
+  padding: 20px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+.sidebar-logo {
+  width: 70px;
+  margin-bottom: 10px;
+}
+
+.sidebar-header span {
+  font-weight: bold;
+  font-size: 14px;
+  display: block;
+}
+
+/* BOTÕES */
+.sidebar button {
+  background: none;
+  border: none;
+  color: #fff;
+  text-align: left;
+  padding: 14px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.2s;
+}
+
+.sidebar button:hover {
+  background: rgba(255,255,255,0.15);
+}
+
+/* RODAPÉ */
+.sidebar-footer {
+  margin-top: auto;
+  padding-bottom: 10px;
+}
+
+.sidebar .logout {
+  background: #8b0000;
+  margin: 10px 15px;
+  padding: 10px;
+  font-size: 13px;
+  border-radius: 4px;
+  text-align: center;
+  width: calc(100% - 30px);
+}
+
+.sidebar .logout:hover {
+  background: #b22222;
+}
+
+/* ===== CONTEÚDO ===== */
+.main-content {
+  margin-left: 260px;
+  padding: 20px;
+}
+/* BOAS-VINDAS */
+#boasVindas {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* BRASÃO NO CONTEÚDO */
+.brasao-topo {
+  width: 90px;
+  display: block;
+  margin: 0 auto 10px auto;
+}
+/* ===== TOPO SEM SIDEBAR (INDEX E POLICIAL) ===== */
+.topo-full {
+  margin-left: 0 !important;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.topo-full .brasao {
+  display: block;
+  margin: 0 auto 10px auto;
+}
+
+.topo-full .titulo-topo {
+  text-align: center;
 }
