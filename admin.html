@@ -15,19 +15,30 @@
 
 <body>
 
-<div class="container">
+<div class="main-content">
+
 
   <!-- BOAS-VINDAS -->
   <div id="boasVindas" class="card"></div>
 
   <!-- MENU -->
-  <div class="card">
-    <button onclick="mostrar('cadastro')">Cadastrar Policial</button>
-    <button onclick="mostrar('pontos')">Lançar Pontos</button>
-    <button onclick="mostrar('compensar')">Compensar Folga</button>
-    <button onclick="mostrar('consulta')">Consultar Pontuação</button>
-    
+  <div class="sidebar">
+  <div class="sidebar-header">
+    <img src="brasao_pmrn.png" class="sidebar-logo">
+    <span>2º BPM</span>
   </div>
+
+  <button onclick="telaInicial()">🏠 Tela Inicial</button>
+  <button onclick="mostrar('cadastro')">👮 Cadastrar Policial</button>
+  <button onclick="mostrar('pontos')">➕ Lançar Pontos</button>
+  <button onclick="mostrar('compensar')">🗓️ Compensar Folga</button>
+  <button onclick="mostrar('consulta')">📊 Consultar Pontuação</button>
+
+  <div class="sidebar-footer">
+    <button class="logout" onclick="logout()">⛔ Sair</button>
+  </div>
+ </div>
+
 
   <!-- CADASTRO -->
   <div id="cadastro" class="card" style="display:none">
@@ -70,7 +81,7 @@
     <div id="nomePolicial" class="info"></div>
 
     <select id="pontTipo">
-      <option value="APF">APF – 5</option>
+      <option value="APF">APF Simples – 5</option>
       <option value="DROGA">Apreensão de Droga – 10</option>
       <option value="ARMA">Apreensão de Arma – 10</option>
       <option value="VEICULO">Apreensão/Recuperação de Veículo – 10</option>
@@ -104,15 +115,43 @@
   <div id="consulta" class="card" style="display:none">
     <h3>Consulta de Pontuação</h3>
     <input id="consMat" placeholder="Matrícula (opcional)">
+     <label>Data inicial:</label>
+   <input type="date" id="dataInicio">
+   <label>Data final:</label>
+   <input type="date" id="dataFim">
     <button onclick="consultarPontos()">Consultar</button>
     <button onclick="gerarPDFConsulta()">Gerar PDF</button>
     <div id="resultadoConsulta"></div>
   </div>
+ 
+ 
+<!-- DASHBOARD -->
+<div id="dashboard" class="card">
+  <h3>📊 Painel Administrativo – Banco de Pontos </h3>
 
-  <div class="card">
-  <button class="logout" onclick="logout()">SAIR</button>
-  <button class="btn-secundario" onclick="telaInicial()">TELA INICIAL</button>
-</div>
+  <div class="dash-cards">
+    <div class="dash-item">
+      <span id="dashTotalPoliciais">0</span>
+      <small>Policiais Cadastrados</small>
+    </div>
+
+    <div class="dash-item">
+      <span id="dashAptos">0</span>
+      <small>Aptos à Folga</small>
+    </div>
+
+    <div class="dash-item">
+      <span id="dashPontos">0</span>
+      <small>Pontos Totais do BPM</small>
+    </div>
+
+    <div class="dash-item">
+      <span id="dashFolgas">0</span>
+      <small>Folgas Compensadas</small>
+    </div>
+  </div>
+
+  <div id="listaAptos"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
