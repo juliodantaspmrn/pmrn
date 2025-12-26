@@ -609,6 +609,9 @@ const { data: compensacoes } = await qComp;
 
   html += "</table>";
   $("resultadoConsulta").innerHTML = html;
+   consMat.value = "";
+  document.getElementById("dataInicio").value = "";
+ document.getElementById("dataFim").value = "";
 }
 
 
@@ -898,5 +901,6 @@ carregarDashboard();
 
 
   
+
 
 
