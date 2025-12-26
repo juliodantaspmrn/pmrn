@@ -1,4 +1,5 @@
- const usuario = JSON.parse(localStorage.getItem("usuario"));
+ const usuario = JSON.parse(sessionStorage.getItem("usuario"));
+
 
 if (!usuario) {
   alert("Sessão expirada. Faça login novamente.");
@@ -88,8 +89,9 @@ async function carregar() {
 }
 
 function logout() {
-  localStorage.clear();
+  sessionStorage.removeItem("usuario");
   window.location.href = "index.html";
 }
+
 
 carregar();
