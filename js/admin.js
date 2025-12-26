@@ -73,6 +73,15 @@ async function buscarPolicialReset() {
 
   document.getElementById("resetNome").value = data.nome_completo;
 }
+function renovarSessao() {
+  const usuario = JSON.parse(localStorage.getItem("usuario"));
+  if (usuario) {
+    usuario.loginTime = Date.now();
+    localStorage.setItem("usuario", JSON.stringify(usuario));
+  }
+}
+
+document.addEventListener("click", renovarSessao);
 
 
 async function resetarSenhaPolicial() {
