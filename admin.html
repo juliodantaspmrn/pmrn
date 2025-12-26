@@ -11,6 +11,8 @@
 <header class="topo">
   <img src="brasao_pmrn.png" alt="Brasão PMRN" class="brasao">
   <div class="titulo-topo">ADMIN – BANCO DE PONTOS | 2º BPM</div>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 </header>
 
 <body>
@@ -33,6 +35,7 @@
   <button onclick="mostrar('pontos')">➕ Lançar Pontos</button>
   <button onclick="mostrar('compensar')">🗓️ Compensar Folga</button>
   <button onclick="mostrar('consulta')">📊 Consultar Pontuação</button>
+  <button onclick="abrirResetSenha()"> 🔑 Resetar Senha </button>
 
   <div class="sidebar-footer">
     <button class="logout" onclick="logout()">⛔ Sair</button>
@@ -124,6 +127,29 @@
     <div id="resultadoConsulta"></div>
   </div>
  
+ <div id="resetSenhaBox" style="display:none" class="card-admin">
+
+  <h3>RESET DE SENHA – POLICIAL</h3>
+
+  <input id="resetMatricula"
+         placeholder="Matrícula do policial"
+         onblur="buscarPolicialReset()">
+
+  <input id="resetNome"
+         placeholder="Nome do policial"
+         disabled>
+
+  <input id="resetSenha" type="password" placeholder="Nova senha">
+
+  <input id="resetSenhaConf" type="password" placeholder="Confirmar nova senha">
+
+  <button onclick="resetarSenhaPolicial()">
+    CONFIRMAR RESET
+  </button>
+
+</div>
+
+
  
 <!-- DASHBOARD -->
 <div id="dashboard" class="card">
