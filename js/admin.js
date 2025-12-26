@@ -1,4 +1,5 @@
-const usuario = JSON.parse(localStorage.getItem("usuario"));
+const usuario = JSON.parse(sessionStorage.getItem("usuario"));
+
 
 if (!usuario) {
   alert("Sessão expirada. Faça login novamente.");
@@ -13,7 +14,7 @@ const { jsPDF } = window.jspdf;
 
 function $(id){ return document.getElementById(id); }
 
-const admin = JSON.parse(localStorage.getItem("usuario"));
+const admin = JSON.parse(sessionStorage.getItem("usuario"));
 if (!admin || admin.perfil !== "ADM") {
   alert("Acesso não autorizado");
   window.location.href = "index.html";
@@ -37,10 +38,11 @@ function mostrar(id) {
 
 
 /* LOGOUT */
-function logout(){
-  localStorage.clear();
+function logout() {
+  sessionStorage.removeItem("usuario");
   window.location.href = "index.html";
 }
+
 async function gerarHashSenha(senha) {
   const encoder = new TextEncoder();
   const data = encoder.encode(senha);
@@ -74,10 +76,10 @@ async function buscarPolicialReset() {
   document.getElementById("resetNome").value = data.nome_completo;
 }
 function renovarSessao() {
-  const usuario = JSON.parse(localStorage.getItem("usuario"));
+  const usuario = JSON.parse(sessionStorage.getItem("usuario"));
   if (usuario) {
     usuario.loginTime = Date.now();
-    localStorage.setItem("usuario", JSON.stringify(usuario));
+    sessionStorage.setItem("usuario", JSON.stringify(usuario));
   }
 }
 
