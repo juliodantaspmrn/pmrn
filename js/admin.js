@@ -1,3 +1,4 @@
+
 const { jsPDF } = window.jspdf;
 
 function $(id){ return document.getElementById(id); }
@@ -30,6 +31,88 @@ function logout(){
   localStorage.clear();
   window.location.href = "index.html";
 }
+async function gerarHashSenha(senha) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(senha);
+  const hash = await crypto.subtle.digest("SHA-256", data);
+
+  return Array.from(new Uint8Array(hash))
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+async function buscarPolicialReset() {
+
+  const matricula = document.getElementById("resetMatricula").value
+    .trim()
+    .toUpperCase();
+
+  if (!matricula) return;
+
+  const { data, error } = await supabaseClient
+    .from("usuarios")
+    .select("nome_completo")
+    .eq("matricula", matricula)
+    .eq("perfil", "POLICIAL")
+    .single();
+
+  if (error || !data) {
+    alert("Policial não encontrado");
+    document.getElementById("resetNome").value = "";
+    return;
+  }
+
+  document.getElementById("resetNome").value = data.nome_completo;
+}
+
+
+async function resetarSenhaPolicial() {
+
+  const matricula = document.getElementById("resetMatricula").value
+    .trim()
+    .toUpperCase();
+
+  const nome = document.getElementById("resetNome").value;
+  const senha = document.getElementById("resetSenha").value;
+  const senhaConf = document.getElementById("resetSenhaConf").value;
+
+  if (!matricula || !nome) {
+    alert("Informe uma matrícula válida");
+    return;
+  }
+
+  if (!senha || !senhaConf) {
+    alert("Informe a nova senha");
+    return;
+  }
+
+  if (senha !== senhaConf) {
+    alert("As senhas não conferem");
+    return;
+  }
+
+  const senhaHash = await gerarHashSenha(senha);
+
+  const { error } = await supabaseClient
+    .from("usuarios")
+    .update({ senha: senhaHash })
+    .eq("matricula", matricula)
+    .eq("perfil", "POLICIAL");
+
+  if (error) {
+    alert("Erro ao redefinir senha");
+    return;
+  }
+
+  alert(`Senha redefinida com sucesso para ${nome}`);
+
+  document.getElementById("resetMatricula").value = "";
+  document.getElementById("resetNome").value = "";
+  document.getElementById("resetSenha").value = "";
+  document.getElementById("resetSenhaConf").value = "";
+}
+
+
+
 
 /* CADASTRAR POLICIAL */
 async function cadastrarPolicial() {
@@ -39,14 +122,18 @@ async function cadastrarPolicial() {
     return;
   }
 
-  const { error } = await supabaseClient.from("usuarios").insert([{
-    matricula: cadMat.value.trim().toUpperCase(),
-    nome_completo: cadNome.value.trim().toUpperCase(),
-    graduacao: cadGrad.value,
-    opm: cadOpm.value.trim().toUpperCase(),
-    senha: cadSenha.value,
-    perfil: "POLICIAL"
-  }]);
+  const senhaHash = await gerarHashSenha(cadSenha.value);
+
+  const { error } = await supabaseClient
+    .from("usuarios")
+    .insert([{
+      matricula: cadMat.value.trim().toUpperCase(),
+      nome_completo: cadNome.value.trim().toUpperCase(),
+      graduacao: cadGrad.value,
+      opm: cadOpm.value.trim().toUpperCase(),
+      senha: senhaHash, // 🔐 HASH AQUI
+      perfil: "POLICIAL"
+    }]);
 
   if (error) return alert(error.message);
 
@@ -57,6 +144,10 @@ async function cadastrarPolicial() {
   cadSenha.value = "";
   cadSenhaConf.value = "";
   cadOpm.value = "";
+}
+
+function abrirResetSenha() {
+  document.getElementById("resetSenhaBox").style.display = "block";
 }
 
 
@@ -504,7 +595,7 @@ const { data: compensacoes } = await qComp;
    TELA INICIAL / LIMPAR
 ========================= */
 function telaInicial() {
-  ["cadastro", "pontos", "compensar", "consulta"].forEach(div => {
+  ["cadastro", "pontos", "compensar", "consulta", "resetSenhaBox" ].forEach(div => {
     const el = document.getElementById(div);
     if (el) el.style.display = "none";
   });
