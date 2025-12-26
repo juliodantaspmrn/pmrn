@@ -1,4 +1,14 @@
+const usuario = JSON.parse(localStorage.getItem("usuario"));
 
+if (!usuario) {
+  alert("Sessão expirada. Faça login novamente.");
+  window.location.href = "index.html";
+}
+
+if (usuario.perfil !== "ADM") {
+  alert("Acesso restrito à administração");
+  window.location.href = "index.html";
+}
 const { jsPDF } = window.jspdf;
 
 function $(id){ return document.getElementById(id); }
