@@ -382,3 +382,18 @@ input:disabled {
   }
 
 }
+@media (max-width: 768px) {
+
+  .topo {
+    flex-direction: column;
+  }
+
+  .brasao {
+    margin: 0 auto;
+  }
+
+  .titulo-topo {
+    font-size: 14px;
+    text-align: center;
+  }
+}
