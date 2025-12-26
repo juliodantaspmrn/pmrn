@@ -304,3 +304,58 @@ tr.saldo {
 .topo-full .titulo-topo {
   text-align: center;
 }
+input:disabled {
+  background-color: #163064;   /* cinza institucional */
+  color: #f7f2f2;              /* azul escuro */
+  border: 1px solid #f4f6fa;
+  font-weight: 500;
+  opacity: 4;
+}
+/* =========================
+   AJUSTE MÍNIMO MOBILE
+========================= */
+@media (max-width: 768px) {
+
+  body {
+    font-size: 14px;
+  }
+
+  .container {
+    width: 95%;
+    padding: 10px;
+  }
+
+  input, select, button {
+    width: 100%;
+    font-size: 15px;
+    margin-bottom: 8px;
+  }
+
+  button {
+    padding: 10px;
+  }
+
+  table {
+    font-size: 12px;
+  }
+
+  th, td {
+    padding: 6px;
+  }
+
+  .topo {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .brasao {
+    width: 60px;
+    margin-bottom: 5px;
+  }
+
+  .menu-lateral {
+    width: 100%;
+    position: relative;
+    height: auto;
+  }
+}
