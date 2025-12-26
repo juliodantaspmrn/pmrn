@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Admin – Banco de Horas 2º BPM</title>
+<link rel="stylesheet" href="css/institucional.css">
+</head>
+
+<body>
+
+ <header class="topo topo-full">
+  <img src="brasao_pmrn.png" alt="Brasão PMRN" class="brasao">
+  <div class="titulo-topo"> BANCO DE PONTOS | 2º BPM</div>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+ </header>
+<body>
+
+
+<div class="container">
+  <input id="matricula" placeholder="Matrícula">
+  <input id="senha" type="password" placeholder="Senha">
+  <button onclick="login()">ENTRAR</button>
+</div>
+
+<!-- CDN PRIMEIRO -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- DEPOIS O CLIENT -->
+<script src="js/supabase.js"></script>
+
+<!-- DEPOIS A LÓGICA -->
+<script src="js/login.js"></script>
+</body>
+</html>

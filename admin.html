@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Admin – Banco de Horas 2º BPM</title>
+<link rel="stylesheet" href="css/institucional.css">
+</head>
+
+<body>
+
+<header class="topo">
+  <img src="brasao_pmrn.png" alt="Brasão PMRN" class="brasao">
+  <div class="titulo-topo">ADMIN – BANCO DE PONTOS | 2º BPM</div>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+</header>
+
+<body>
+
+<div class="main-content">
+
+
+  <!-- BOAS-VINDAS -->
+  <div id="boasVindas" class="card"></div>
+
+  <!-- MENU -->
+  <div class="sidebar">
+  <div class="sidebar-header">
+    <img src="brasao_pmrn.png" class="sidebar-logo">
+    <span>2º BPM</span>
+  </div>
+
+  <button onclick="telaInicial()">🏠 Tela Inicial</button>
+  <button onclick="mostrar('cadastro')">👮 Cadastrar Policial</button>
+  <button onclick="mostrar('pontos')">➕ Lançar Pontos</button>
+  <button onclick="mostrar('compensar')">🗓️ Compensar Folga</button>
+  <button onclick="mostrar('consulta')">📊 Consultar Pontuação</button>
+  <button onclick="abrirResetSenha()"> 🔑 Resetar Senha </button>
+
+  <div class="sidebar-footer">
+    <button class="logout" onclick="logout()">⛔ Sair</button>
+  </div>
+ </div>
+
+
+  <!-- CADASTRO -->
+  <div id="cadastro" class="card" style="display:none">
+    <h3>Cadastrar Policial</h3>
+
+    <input id="cadMat" placeholder="Matrícula">
+    <input id="cadNome" placeholder="Nome Completo">
+
+    <label>Posto / Graduação</label>
+    <select id="cadGrad">
+      <option value="">Selecione</option>
+      <option>SD PM</option>
+      <option>CB PM</option>
+      <option>3º SGT PM</option>
+      <option>2º SGT PM</option>
+      <option>1º SGT PM</option>
+      <option>ST PM</option>
+      <option>ASP PM</option>
+      <option>2º TEN PM</option>
+      <option>1º TEN PM</option>
+      <option>CAP PM</option>
+      <option>MAJ PM</option>
+      <option>TC PM</option>
+      <option>CEL PM</option>
+    </select>
+
+    <input id="cadOpm" placeholder="OPM">
+    <input type="password" id="cadSenha" placeholder="Senha">
+    <input type="password" id="cadSenhaConf" placeholder="Confirmar Senha">
+
+    <button onclick="cadastrarPolicial()">Salvar</button>
+  </div>
+
+  <!-- LANÇAR PONTOS -->
+  <div id="pontos" class="card" style="display:none">
+    <h3>Lançar Pontuação</h3>
+    
+    <input id="pontMat" placeholder="Matrícula(s) – separar por vírgula"
+           onblur="buscarNome(this.value,'nomePolicial')">
+    <div id="nomePolicial" class="info"></div>
+
+    <select id="pontTipo">
+      <option value="APF">APF Simples – 5</option>
+      <option value="DROGA">Apreensão de Droga – 10</option>
+      <option value="ARMA">Apreensão de Arma – 10</option>
+      <option value="VEICULO">Apreensão/Recuperação de Veículo – 10</option>
+    </select>
+
+    <input id="pontData" type="date">
+    <input id="pontHora" type="time">
+    <input id="pontProc" placeholder="Nº do Procedimento">
+    <textarea id="pontInfo" placeholder="Observações"></textarea>
+
+    <button onclick="cadastrarPonto()">Salvar Pontuação</button>
+  </div>
+
+  <!-- COMPENSAR -->
+  <div id="compensar" class="card" style="display:none">
+    <h3>Compensar Folga</h3>
+
+    <input id="compMat" placeholder="Matrícula"
+           onblur="buscarNome(this.value,'nomeComp')">
+    <div id="nomeComp" class="info"></div>
+
+    <input id="compCmd" placeholder="Comandante Autorizador">
+    <label>Data da Folga</label>
+    <input type="date" id="compData">
+
+    <button onclick="verificarCompensacao()">Verificar</button>
+    <div id="compResultado"></div>
+  </div>
+
+  <!-- CONSULTA -->
+  <div id="consulta" class="card" style="display:none">
+    <h3>Consulta de Pontuação</h3>
+    <input id="consMat" placeholder="Matrícula (opcional)">
+     <label>Data inicial:</label>
+   <input type="date" id="dataInicio">
+   <label>Data final:</label>
+   <input type="date" id="dataFim">
+    <button onclick="consultarPontos()">Consultar</button>
+    <button onclick="gerarPDFConsulta()">Gerar PDF</button>
+    <div id="resultadoConsulta"></div>
+  </div>
+ 
+ <div id="resetSenhaBox" style="display:none" class="card-admin">
+
+  <h3>RESET DE SENHA – POLICIAL</h3>
+
+  <input id="resetMatricula"
+         placeholder="Matrícula do policial"
+         onblur="buscarPolicialReset()">
+
+  <input id="resetNome"
+         placeholder="Nome do policial"
+         disabled>
+
+  <input id="resetSenha" type="password" placeholder="Nova senha">
+
+  <input id="resetSenhaConf" type="password" placeholder="Confirmar nova senha">
+
+  <button onclick="resetarSenhaPolicial()">
+    CONFIRMAR RESET
+  </button>
+
+</div>
+
+
+ 
+<!-- DASHBOARD -->
+<div id="dashboard" class="card">
+  <h3>📊 Painel Administrativo – Banco de Pontos </h3>
+
+  <div class="dash-cards">
+    <div class="dash-item">
+      <span id="dashTotalPoliciais">0</span>
+      <small>Policiais Cadastrados</small>
+    </div>
+
+    <div class="dash-item">
+      <span id="dashAptos">0</span>
+      <small>Aptos à Folga</small>
+    </div>
+
+    <div class="dash-item">
+      <span id="dashPontos">0</span>
+      <small>Pontos Totais do BPM</small>
+    </div>
+
+    <div class="dash-item">
+      <span id="dashFolgas">0</span>
+      <small>Folgas Compensadas</small>
+    </div>
+  </div>
+
+  <div id="listaAptos"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
