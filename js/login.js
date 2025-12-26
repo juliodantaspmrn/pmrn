@@ -7,13 +7,14 @@ async function gerarHashSenha(senha) {
     .map(b => b.toString(16).padStart(2, "0"))
     .join("");
 }
-localStorage.setItem("usuario", JSON.stringify({
+sessionStorage.setItem("usuario", JSON.stringify({
   matricula: data.matricula,
   nome_completo: data.nome_completo,
   graduacao: data.graduacao,
   perfil: data.perfil,
   loginTime: Date.now()
 }));
+
 
 async function login() {
 
@@ -56,7 +57,7 @@ async function login() {
   }
 
   // 🔒 SALVA SESSÃO SEM SENHA
-  localStorage.setItem("usuario", JSON.stringify({
+  sessionStorage.setItem("usuario", JSON.stringify({
     matricula: data.matricula,
     nome_completo: data.nome_completo,
     graduacao: data.graduacao,
