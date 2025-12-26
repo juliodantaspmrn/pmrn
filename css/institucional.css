@@ -359,3 +359,26 @@ input:disabled {
     height: auto;
   }
 }
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+
+  .sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+  }
+
+  .sidebar button {
+    text-align: center;
+  }
+
+  .main-content {
+    margin-left: 0;
+    padding: 10px;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+
+}
