@@ -77,15 +77,26 @@ async function carregar() {
 
   /* =========================
      RESUMO FINAL
-  ========================= */
-  const saldo = totalPontos - totalCompensado;
+========================= */
+const saldo = totalPontos - totalCompensado;
 
-  document.getElementById("resumo").innerHTML += `
-    <hr>
-    <p><strong>Total de Pontos:</strong> ${totalPontos}</p>
-    <p><strong>Total Compensado:</strong> ${totalCompensado}</p>
-    <p><strong>Saldo Atual:</strong> ${saldo}</p>
+let mensagemApto = "";
+if (saldo >= 40) {
+  mensagemApto = `
+    <p style="color: green; font-weight: bold;">
+      ✅ VOCÊ ESTÁ APTO À FOLGA. ENTRE EM CONTATO COM A SUA UNIDADE.
+    </p>
   `;
+}
+
+document.getElementById("resumo").innerHTML += `
+  <hr>
+  <p><strong>Total de Pontos:</strong> ${totalPontos}</p>
+  <p><strong>Total Compensado:</strong> ${totalCompensado}</p>
+  <p><strong>Saldo Atual:</strong> ${saldo}</p>
+  ${mensagemApto}
+`;
+
 }
 
 function logout() {
