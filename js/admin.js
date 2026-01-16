@@ -1,5 +1,5 @@
 const usuario = JSON.parse(sessionStorage.getItem("usuario"));
-
+const OPM_ADM = usuario.opm;
 
 if (!usuario) {
   alert("Sessão expirada. Faça login novamente.");
@@ -9,6 +9,7 @@ if (!usuario) {
 if (usuario.perfil !== "ADM") {
   alert("Acesso restrito à administração");
   window.location.href = "index.html";
+  
 }
 const { jsPDF } = window.jspdf;
 
@@ -28,10 +29,29 @@ function formatarDataBR(dataISO) {
 /* BOAS-VINDAS */
 $("boasVindas").innerHTML =
   `<h3>SEJA BEM-VINDO, ${admin.graduacao} ${admin.nome_completo}</h3>`;
+ telaInicial("dashboard");
 
 /* CONTROLE DE TELAS */
 function mostrar(id) {
-  telaInicial(); // primeiro limpa tudo
+
+  // esconde dashboard
+  const dashboard = document.getElementById("dashboard");
+  if (dashboard) dashboard.style.display = "none";
+
+  // esconde todas as telas
+  [
+    "cadastro",
+    "pontos",
+    "compensar",
+    "consulta",
+    "resetSenhaBox",
+    "ranking"
+  ].forEach(div => {
+    const el = document.getElementById(div);
+    if (el) el.style.display = "none";
+  });
+
+  // mostra somente a tela clicada
   const el = document.getElementById(id);
   if (el) el.style.display = "block";
 }
@@ -228,9 +248,41 @@ async function cadastrarPonto() {
     alert("Nenhuma matrícula válida informada");
     return;
   }
+   if (!pontData.value) {
+    alert("Informe a data do lançamento");
+    return;
+  }
 
-  const pontos = pontTipo.value === "APF" ? 5 : 10;
+  if (!pontHora.value) {
+    alert("Informe o horário do lançamento");
+    return;
+  }
 
+  if (!pontProc.value.trim()) {
+    alert("Informe o número do procedimento");
+    return;
+  }
+
+  if (!pontInfo.value.trim()) {
+    alert("Informe a observação");
+    return;
+  }
+
+  // ===== VALIDA DATA (NÃO PODE SER FUTURA) =====
+ const hoje = new Date().toISOString().split("T")[0]; 
+ // formato: YYYY-MM-DD
+
+ if (pontData.value > hoje) {
+  alert("A data do lançamento não pode ser posterior à data atual");
+  return;
+ }
+   // Tipos que valem 5 pontos
+   const tiposCincoPontos = [
+    "APF - MANDADO DE PRISÃO",
+    "VEÍCULO ENCONTRADO"
+   ];
+
+   const pontos = tiposCincoPontos.includes(pontTipo.value) ? 5 : 10;
   // 1️⃣ Buscar todos os policiais informados
   const { data: usuarios } = await supabaseClient
     .from("usuarios")
@@ -447,12 +499,11 @@ function gerarPDFCompensacao(d) {
   y += 35;
 
   doc.line(30, y, 90, y);
-  doc.line(120, y, 180, y);
 
   y += 5;
   doc.setFontSize(10);
   doc.text("Policial Militar", 60, y, { align: "center" });
-  doc.text("Comandante Autorizador", 150, y, { align: "center" });
+ 
 
   /* ===== CÓDIGO DE CONTROLE ===== */
   y += 15;
@@ -471,10 +522,17 @@ let dadosConsulta = [];
 
   const matFiltro = consMat.value || null;
 
-  /* USUÁRIOS */
-  let qUser = supabaseClient
-    .from("usuarios")
-    .select("matricula, nome_completo");
+  const opmFiltro = document.getElementById("filtroOpm")?.value || null;
+
+ /* USUÁRIOS */
+let qUser = supabaseClient
+  .from("usuarios")
+  .select("matricula, nome_completo, opm")
+  
+
+ if (matFiltro) qUser = qUser.eq("matricula", matFiltro);
+ if (opmFiltro) qUser = qUser.eq("opm", opmFiltro);
+
 
   if (matFiltro) qUser = qUser.eq("matricula", matFiltro);
   const dataInicio = document.getElementById("dataInicio")?.value || null;
@@ -609,20 +667,29 @@ const { data: compensacoes } = await qComp;
 
   html += "</table>";
   $("resultadoConsulta").innerHTML = html;
-   consMat.value = "";
+  consMat.value = "";
   document.getElementById("dataInicio").value = "";
  document.getElementById("dataFim").value = "";
+ document.getElementById("filtroOpm").value = "";
+
 }
 
 
 /* =========================
    TELA INICIAL / LIMPAR
 ========================= */
-function telaInicial() {
-  ["cadastro", "pontos", "compensar", "consulta", "resetSenhaBox" ].forEach(div => {
+function telaInicial(id = "dashboard") {
+  ["cadastro", "pontos", "compensar", "consulta", "resetSenhaBox", "ranking" ].forEach(div => {
     const el = document.getElementById(div);
     if (el) el.style.display = "none";
   });
+  // esconde dashboard
+  const dash = document.getElementById("dashboard");
+  if (dash) dash.style.display = "none";
+
+  // mostra a tela solicitada
+  const alvo = document.getElementById(id);
+  if (alvo) alvo.style.display = "block";
 }
 let dadosCompensacoes = [];
 
@@ -813,7 +880,8 @@ async function carregarDashboard() {
   /* USUÁRIOS */
   const { data: usuarios } = await supabaseClient
     .from("usuarios")
-    .select("matricula, nome_completo");
+    .select("matricula, nome_completo")
+    
 
   /* PONTUAÇÕES */
   const { data: pontos } = await supabaseClient
@@ -823,7 +891,9 @@ async function carregarDashboard() {
   /* COMPENSAÇÕES */
   const { data: compensacoes } = await supabaseClient
     .from("compensacoes")
-    .select("matricula, pontos_utilizados");
+    .select("matricula, pontos_utilizados")
+    
+    
 
   if (!usuarios) return;
 
@@ -896,11 +966,94 @@ async function carregarDashboard() {
 
   $("listaAptos").innerHTML = html;
 }
+
+async function buscarRanking() {
+
+  const dataInicio = document.getElementById("rankInicio").value;
+  const dataFim = document.getElementById("rankFim").value;
+
+  if (!dataInicio || !dataFim) {
+    alert("Informe o período inicial e final");
+    return;
+  }
+
+
+  /* 1️⃣ Buscar policiais da OPM */
+  const { data: usuarios } = await supabaseClient
+    .from("usuarios")
+    .select("matricula, nome_completo")
+    
+  if (!usuarios || usuarios.length === 0) {
+    document.getElementById("resultadoRanking").innerHTML =
+      "Nenhum policial encontrado";
+    return;
+  }
+
+  const matriculas = usuarios.map(u => u.matricula);
+
+  /* 2️⃣ Buscar pontuações no período (SEM COMPENSAÇÃO) */
+  const { data: pontuacoes } = await supabaseClient
+    .from("pontuacoes")
+    .select("matricula, pontos")
+    .in("matricula", matriculas)
+    .gte("data", dataInicio)
+    .lte("data", dataFim);
+
+  if (!pontuacoes || pontuacoes.length === 0) {
+    document.getElementById("resultadoRanking").innerHTML =
+      "Nenhuma pontuação no período";
+    return;
+  }
+
+  /* 3️⃣ Soma pontos por policial */
+  const ranking = {};
+
+  pontuacoes.forEach(p => {
+    if (!ranking[p.matricula]) {
+      ranking[p.matricula] = 0;
+    }
+    ranking[p.matricula] += p.pontos;
+  });
+
+  /* 4️⃣ Junta nome + pontos */
+  const resultado = usuarios.map(u => ({
+    nome: u.nome_completo,
+    pontos: ranking[u.matricula] || 0
+  }));
+
+  /* 5️⃣ Ordena e pega TOP 3 */
+  const top3 = resultado
+    .sort((a, b) => b.pontos - a.pontos)
+    .slice(0, 3);
+
+  /* 6️⃣ Exibe */
+  let html = `
+    <table>
+      <tr>
+        <th>Posição</th>
+        <th>Policial</th>
+        <th>Pontos</th>
+      </tr>
+  `;
+
+  top3.forEach((p, i) => {
+    html += `
+      <tr>
+        <td>${i + 1}º</td>
+        <td>${p.nome}</td>
+        <td>${p.pontos}</td>
+      </tr>
+    `;
+  });
+
+  html += "</table>";
+
+  document.getElementById("resultadoRanking").innerHTML = html;
+}
 carregarDashboard();
 
 
 
   
-
 
 
