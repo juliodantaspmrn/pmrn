@@ -14,7 +14,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 </header>
-
+<footer class="rodape">
+  Sistema de Pontuação Operacional 
+  <br>
+  Versão Beta 1.1 • Uso Interno
+</footer>
 <body>
 
 <div class="main-content">
@@ -26,15 +30,16 @@
   <!-- MENU -->
   <div class="sidebar">
   <div class="sidebar-header">
-    <img src="brasao_pmrn.png" class="sidebar-logo">
-    <span>2º BPM</span>
+    <img src="brasao_cpr1.png" class="sidebar-logo">
+    <span>CPR I</span>
   </div>
 
-  <button onclick="telaInicial()">🏠 Tela Inicial</button>
+  <button onclick="telaInicial('dashboard')">🏠 Tela Inicial</button>
   <button onclick="mostrar('cadastro')">👮 Cadastrar Policial</button>
   <button onclick="mostrar('pontos')">➕ Lançar Pontos</button>
   <button onclick="mostrar('compensar')">🗓️ Compensar Folga</button>
   <button onclick="mostrar('consulta')">📊 Consultar Pontuação</button>
+  <button onclick="mostrar('ranking')">🏅 Policiais Destaque</button>
   <button onclick="mostrar('resetSenhaBox')"> 🔑 Resetar Senha </button>
 
   <div class="sidebar-footer">
@@ -68,13 +73,36 @@
       <option>CEL PM</option>
     </select>
 
-    <input id="cadOpm" placeholder="OPM">
+    <select id="cadOpm">
+  <option value="">Selecione a OPM</option>
+
+  <option value="1ª CIA / 2º BPM">1ª CIA / 2º BPM</option>
+  <option value="2ª CIA / 2º BPM">2ª CIA / 2º BPM</option>
+  <option value="3ª CIA / 2º BPM">3ª CIA / 2º BPM</option>
+
+  <option value="1ª CIA / 12º BPM">1ª CIA / 12º BPM</option>
+  <option value="2ª CIA / 12º BPM">2ª CIA / 12º BPM</option>
+  <option value="3ª CIA / 12º BPM">3ª CIA / 12º BPM</option>
+
+  <option value="6ª CIPM">6ª CIPM</option>
+   </select>
     <input type="password" id="cadSenha" placeholder="Senha">
     <input type="password" id="cadSenhaConf" placeholder="Confirmar Senha">
 
     <button onclick="cadastrarPolicial()">Salvar</button>
   </div>
+<div id="ranking" style="display:none">
 
+  <h3>🏅 Policiais Destaque por Período</h3>
+
+  <input type="date" id="rankInicio">
+  <input type="date" id="rankFim">
+
+  <button onclick="buscarRanking()">Buscar</button>
+
+  <div id="resultadoRanking"></div>
+
+</div>
   <!-- LANÇAR PONTOS -->
   <div id="pontos" class="card" style="display:none">
     <h3>Lançar Pontuação</h3>
@@ -84,10 +112,11 @@
     <div id="nomePolicial" class="info"></div>
 
     <select id="pontTipo">
-      <option value="APF">APF Simples – 5</option>
-      <option value="DROGA">Apreensão de Droga – 10</option>
+      <option value="APF - MANDADO DE PRISÃO">Cumprimento de Mandado de Prisão – 5</option>
+      <option value="DROGA - TRÁFICO">Apreensão de Droga - Tráfico – 10</option>
       <option value="ARMA">Apreensão de Arma – 10</option>
-      <option value="VEICULO">Apreensão/Recuperação de Veículo – 10</option>
+      <option value="VEÍCULO RECUPERADO">Recuperação de Veículo Roubado/Furtado com Diligência – 10</option>
+      <option value="VEÍCULO ENCONTRADO">Veículo Roubado/Furtado Encontrado sem Diligência – 5</option>
     </select>
 
     <input id="pontData" type="date">
@@ -122,6 +151,17 @@
    <input type="date" id="dataInicio">
    <label>Data final:</label>
    <input type="date" id="dataFim">
+   <select id="filtroOpm">
+  <option value="">Todas as OPM</option>
+  <option value="1ª CIA / 2º BPM">1ª CIA / 2º BPM</option>
+  <option value="2ª CIA / 2º BPM">2ª CIA / 2º BPM</option>
+  <option value="3ª CIA / 2º BPM">3ª CIA / 2º BPM</option>
+  <option value="1ª CIA / 12º BPM">1ª CIA / 12º BPM</option>
+  <option value="2ª CIA / 12º BPM">2ª CIA / 12º BPM</option>
+  <option value="3ª CIA / 12º BPM">3ª CIA / 12º BPM</option>
+  <option value="6ª CIPM">6ª CIPM</option>
+</select>
+
     <button onclick="consultarPontos()">Consultar</button>
     <button onclick="gerarPDFConsulta()">Gerar PDF</button>
     <div id="resultadoConsulta"></div>
@@ -152,9 +192,8 @@
 
  
 <!-- DASHBOARD -->
-<div id="dashboard" class="card">
-  <h3>📊 Painel Administrativo – Banco de Pontos </h3>
-
+<div id="dashboard" class="card" style="display:none">
+    <h3>📊 Painel Administrativo – Banco de Pontos </h3>
   <div class="dash-cards">
     <div class="dash-item">
       <span id="dashTotalPoliciais">0</span>
