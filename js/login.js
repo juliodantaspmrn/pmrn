@@ -66,6 +66,7 @@ async function login() {
 
   if (data.perfil === "ADM") {
     window.location.href = "admin.html";
+   
   } else {
     window.location.href = "policial.html";
   }
