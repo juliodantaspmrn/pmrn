@@ -1,4 +1,5 @@
 const usuario = JSON.parse(sessionStorage.getItem("usuario"));
+const OPM_ADM = usuario.opm;
 
 if (!usuario) {
   alert("Sessão expirada. Faça login novamente.");
@@ -132,11 +133,11 @@ async function resetarSenhaPolicial() {
 
   const senhaHash = await gerarHashSenha(senha);
 
-  const { error } = await supabaseClient
-    .from("usuarios")
-    .update({ senha: senhaHash })
-    .eq("matricula", matricula)
-    .eq("perfil", "POLICIAL");
+   // 🔐 Chamada RPC ao invés de update direto
+  const { data, error } = await supabaseClient.rpc("resetar_senha", {
+    p_matricula: matricula,
+    p_nova_senha: senhaHash
+  });
 
   if (error) {
     alert("Erro ao redefinir senha");
@@ -164,16 +165,14 @@ async function cadastrarPolicial() {
 
   const senhaHash = await gerarHashSenha(cadSenha.value);
 
-  const { error } = await supabaseClient
-    .from("usuarios")
-    .insert([{
-      matricula: cadMat.value.trim().toUpperCase(),
-      nome_completo: cadNome.value.trim().toUpperCase(),
-      graduacao: cadGrad.value,
-      opm: cadOpm.value.trim().toUpperCase(),
-      senha: senhaHash, // 🔐 HASH AQUI
-      perfil: "POLICIAL"
-    }]);
+  const { data, error } = await supabaseClient.rpc("inserir_usuario", {
+    p_matricula: cadMat.value.trim().toUpperCase(),
+    p_nome_completo: cadNome.value.trim().toUpperCase(),
+    p_graduacao: cadGrad.value,
+    p_opm: cadOpm.value.trim().toUpperCase(),
+    p_senha_hash: senhaHash,
+    p_perfil: "POLICIAL"
+  });
 
   if (error) return alert(error.message);
 
@@ -294,27 +293,24 @@ async function cadastrarPonto() {
   }
 
   // 2️⃣ Monta os lançamentos (um por policial)
-  const registros = matriculas.map(mat => ({
-    matricula: mat,
-    tipo: pontTipo.value,
-    pontos: pontos,
-    data: pontData.value,
-    horario: pontHora.value,
-    numero_procedimento: pontProc.value,
-    info_adicional: pontInfo.value
-  }));
+  let sucesso = 0;
+  for (let mat of matriculas) {
+    const { data, error } = await supabaseClient.rpc("inserir_pontuacao", {
+      p_matricula: mat,
+      p_tipo: pontTipo.value,
+      p_pontos: pontos,
+      p_data: pontData.value,
+      p_horario: pontHora.value,
+      p_numero_procedimento: pontProc.value,
+      p_info: pontInfo.value
+    });
 
-  // 3️⃣ Insere tudo de uma vez
-  const { error } = await supabaseClient
-    .from("pontuacoes")
-    .insert(registros);
-
-  if (error) {
-    alert("Erro ao lançar pontuação");
-    return;
+    if (!error) sucesso++;
+    else console.error(`Erro ao lançar pontuação para ${mat}:`, error);
   }
 
-  alert(`Pontuação lançada para ${matriculas.length} policial(is)`);
+  alert(`Pontuação lançada para ${sucesso} policial(is)`);
+
 
   // 4️⃣ Limpa campos
   pontMat.value = "";
@@ -1054,6 +1050,5 @@ carregarDashboard();
 
 
   
-
 
 
