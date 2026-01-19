@@ -51,10 +51,16 @@ async function carregar() {
      BUSCA COMPENSAÇÕES
   ========================= */
   const { data: comps, error: erroComps } = await supabaseClient
-    .from("compensacoes")
-    .select("pontos_utilizados, data_compensacao")
-    .eq("matricula", usuario.matricula)
-    .order("data_compensacao", { ascending: false });
+  .from("compensacoes")
+  .select(`
+    pontos_utilizados,
+    data_compensacao,
+    comandante_autorizador,
+    codigo_controle
+  `)
+  .eq("matricula", usuario.matricula)
+  .order("data_compensacao", { ascending: false });
+
 
   if (erroComps) {
     alert(erroComps.message);
@@ -70,6 +76,8 @@ async function carregar() {
       <tr>
         <td>${c.data_compensacao}</td>
         <td>${c.pontos_utilizados}</td>
+        <td>${c.comandante_autorizador}</td>
+        <td>${c.codigo_controle}</td>
       </tr>`;
   });
 
@@ -103,6 +111,14 @@ function logout() {
   sessionStorage.removeItem("usuario");
   window.location.href = "index.html";
 }
+
+
+
+
+
+
+
+
 
 
 carregar();
