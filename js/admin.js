@@ -45,7 +45,8 @@ function mostrar(id) {
     "compensar",
     "consulta",
     "resetSenhaBox",
-    "ranking"
+    "ranking",
+    "compensacoes"
   ].forEach(div => {
     const el = document.getElementById(div);
     if (el) el.style.display = "none";
@@ -348,7 +349,9 @@ async function verificarCompensacao(){
 }
 
  async function compensarFolga() {
-
+  const codigo = "2BPM-" + Math.random().toString(36)
+  .substr(2, 8)
+  .toUpperCase();
   if (!compData.value) {
     alert("Informe a data da folga");
     return;
@@ -381,9 +384,9 @@ async function verificarCompensacao(){
     const diffDias =
       (dataNova - dataUltima) / (1000 * 60 * 60 * 24);
 
-    if (diffDias < 30) {
+    if (diffDias < 23) {
       alert(
-        `⚠️ Compensação não permitida.\nÚltima folga há ${Math.floor(diffDias)} dias.\nÉ necessário aguardar 30 dias.`
+        `⚠️ Compensação não permitida.\nÚltima folga há ${Math.floor(diffDias)} dias.\nÉ necessário aguardar 23 dias.`
       );
       return;
     }
@@ -393,10 +396,12 @@ async function verificarCompensacao(){
   const { error } = await supabaseClient
     .from("compensacoes")
     .insert([{
-      matricula: matricula,
-      pontos_utilizados: 40,
-      data_compensacao: compData.value,
-      comandante_autorizador: compCmd.value
+  matricula: matricula,
+  pontos_utilizados: 40,
+  data_compensacao: compData.value,
+  comandante_autorizador: compCmd.value,
+  codigo_controle: codigo
+
     }]);
 
   if (error) {
@@ -410,7 +415,8 @@ async function verificarCompensacao(){
     policial: document.getElementById("nomeComp").innerText,
     matricula: matricula,
     comandante: compCmd.value,
-    data: compData.value
+    data: compData.value,
+    codigo: codigo
   });
 
   /* LIMPA CAMPOS */
@@ -442,8 +448,6 @@ function gerarPDFCompensacao(d) {
   const azulPM = [0, 51, 102];
   const cinzaClaro = [230, 230, 230];
 
-  const codigo = "2BPM-" + Math.random().toString(36).substr(2, 8).toUpperCase();
-
   /* ===== CABEÇALHO ===== */
   doc.setFillColor(...azulPM);
   doc.rect(0, 0, 210, 30, "F");
@@ -468,7 +472,7 @@ function gerarPDFCompensacao(d) {
   doc.setFontSize(11);
   doc.setTextColor(0);
 
-  doc.text(` ${d.policial}`, margemX, y);
+  doc.text(`${d.policial}`, margemX, y);
   y += 10;
   doc.text(`Matrícula: ${d.matricula}`, margemX, y);
   y += 10;
@@ -490,24 +494,26 @@ function gerarPDFCompensacao(d) {
     { maxWidth: 170, align: "justify" }
   );
 
-  /* ===== RODAPÉ / ASSINATURAS ===== */
-  y += 35;
+  /* ===== ASSINATURA ===== */
+y += 35;
 
-  doc.line(30, y, 90, y);
+// linha centralizada
+doc.line(65, y, 145, y); // 80 mm de largura, centrada
 
-  y += 5;
-  doc.setFontSize(10);
-  doc.text("Policial Militar", 60, y, { align: "center" });
- 
+y += 5;
+
+// texto centralizado
+doc.text("Policial Militar", 105, y, { align: "center" });
 
   /* ===== CÓDIGO DE CONTROLE ===== */
   y += 15;
   doc.setFontSize(9);
-  doc.text(`Código de controle: ${codigo}`, margemX, y);
+  doc.text(`Código de controle: ${d.codigo}`, margemX, y);
 
   /* ===== FINAL ===== */
   doc.save(`Compensacao_Folga_${d.matricula}.pdf`);
 }
+
 
 
 /* CONSULTA */
@@ -674,7 +680,7 @@ const { data: compensacoes } = await qComp;
    TELA INICIAL / LIMPAR
 ========================= */
 function telaInicial(id = "dashboard") {
-  ["cadastro", "pontos", "compensar", "consulta", "resetSenhaBox", "ranking" ].forEach(div => {
+  ["cadastro", "pontos", "compensar", "consulta", "resetSenhaBox", "ranking", "compensacoes" ].forEach(div => {
     const el = document.getElementById(div);
     if (el) el.style.display = "none";
   });
@@ -1045,6 +1051,65 @@ async function buscarRanking() {
 
   document.getElementById("resultadoRanking").innerHTML = html;
 }
+
+async function buscarCompensacoes() {
+
+  const matricula = document.getElementById("compBuscaMat").value || null;
+  const dataIni = document.getElementById("compDataInicio").value || null;
+  const dataFim = document.getElementById("compDataFim").value || null;
+  const codigo = document.getElementById("compCodigoBusca").value || null;
+
+  let query = supabaseClient
+    .from("compensacoes")
+    .select(`
+      matricula,
+      data_compensacao,
+      comandante_autorizador,
+      codigo_controle
+    `)
+    .order("data_compensacao", { ascending: false });
+
+  if (matricula) query = query.eq("matricula", matricula);
+  if (codigo) query = query.eq("codigo_controle", codigo);
+  if (dataIni) query = query.gte("data_compensacao", dataIni);
+  if (dataFim) query = query.lte("data_compensacao", dataFim);
+
+  const { data, error } = await query;
+
+  if (error || !data || data.length === 0) {
+    document.getElementById("resultadoCompensacoes").innerHTML =
+      "Nenhuma compensação encontrada";
+    return;
+  }
+
+  let html = `
+    <table>
+      <tr>
+        <th>Matrícula</th>
+        <th>Data</th>
+        <th>Comandante Autorizador</th>
+        <th>Código de Controle</th>
+      </tr>
+  `;
+
+  data.forEach(c => {
+    html += `
+      <tr>
+        <td>${c.matricula}</td>
+        <td>${formatarDataBR(c.data_compensacao)}</td>
+        <td>${c.comandante_autorizador}</td>
+        <td>${c.codigo_controle}</td>
+      </tr>
+    `;
+  });
+
+  html += "</table>";
+
+  document.getElementById("resultadoCompensacoes").innerHTML = html;
+}
+
+
+
 carregarDashboard();
 
 
