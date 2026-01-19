@@ -1,5 +1,4 @@
 const usuario = JSON.parse(sessionStorage.getItem("usuario"));
-const OPM_ADM = usuario.opm;
 
 if (!usuario) {
   alert("Sessão expirada. Faça login novamente.");
@@ -1138,5 +1137,6 @@ carregarDashboard();
 
 
   
+
 
 
