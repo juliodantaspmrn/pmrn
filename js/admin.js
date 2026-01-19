@@ -391,17 +391,14 @@ async function verificarCompensacao(){
     }
   }
 
-  /* ✅ INSERE COMPENSAÇÃO */
-  const { error } = await supabaseClient
-    .from("compensacoes")
-    .insert([{
-  matricula: matricula,
-  pontos_utilizados: 40,
-  data_compensacao: compData.value,
-  comandante_autorizador: compCmd.value,
-  codigo_controle: codigo
-
-    }]);
+  /* ✅ INSERE COMPENSAÇÃO VIA RPC */
+const { error } = await supabaseClient.rpc("inserir_compensacao", {
+  p_matricula: matricula,
+  p_pontos_utilizados: 40,
+  p_data_compensacao: compData.value,
+  p_comandante_autorizador: compCmd.value,
+  p_codigo_controle: codigo
+});
 
   if (error) {
     alert(error.message);
