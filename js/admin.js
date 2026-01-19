@@ -1074,28 +1074,50 @@ async function buscarCompensacoes() {
   if (dataIni) query = query.gte("data_compensacao", dataIni);
   if (dataFim) query = query.lte("data_compensacao", dataFim);
 
-  const { data, error } = await query;
+  const { data: compensacoes, error } = await query;
 
-  if (error || !data || data.length === 0) {
+  if (error || !compensacoes || compensacoes.length === 0) {
     document.getElementById("resultadoCompensacoes").innerHTML =
       "Nenhuma compensação encontrada";
     return;
   }
 
+  /* =========================
+     BUSCA NOMES DOS POLICIAIS
+  ========================= */
+
+  const matriculas = [...new Set(compensacoes.map(c => c.matricula))];
+
+  const { data: usuarios } = await supabaseClient
+    .from("usuarios")
+    .select("matricula, nome_completo")
+    .in("matricula", matriculas);
+
+  const mapaNomes = {};
+  usuarios.forEach(u => {
+    mapaNomes[u.matricula] = u.nome_completo;
+  });
+
+  /* =========================
+     MONTA TABELA
+  ========================= */
+
   let html = `
     <table>
       <tr>
         <th>Matrícula</th>
-        <th>Data</th>
+        <th>Nome do Policial</th>
+        <th>Data da Folga</th>
         <th>Comandante Autorizador</th>
         <th>Código de Controle</th>
       </tr>
   `;
 
-  data.forEach(c => {
+  compensacoes.forEach(c => {
     html += `
       <tr>
         <td>${c.matricula}</td>
+        <td>${mapaNomes[c.matricula] || "—"}</td>
         <td>${formatarDataBR(c.data_compensacao)}</td>
         <td>${c.comandante_autorizador}</td>
         <td>${c.codigo_controle}</td>
@@ -1107,6 +1129,7 @@ async function buscarCompensacoes() {
 
   document.getElementById("resultadoCompensacoes").innerHTML = html;
 }
+
 
 
 
